@@ -54,7 +54,9 @@ From the Swagger UI, you can:
 
 From your host machine:
 
-```bash
+
+curl http://localhost:8000/api/v1/health
+`bash
 # Check if the API is running
 curl http://localhost:8000/api/v1/health
 

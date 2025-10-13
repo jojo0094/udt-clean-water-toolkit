@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from .routes import router
-from .database import engine, Base
+from routes import router
+from database import engine, Base
 
 app = FastAPI(
     title="Clean Water Analytics API",

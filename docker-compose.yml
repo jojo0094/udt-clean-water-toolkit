@@ -78,6 +78,7 @@ services:
       - udtpostgis
     volumes:
       - ./cwa/cwa_fastapi:/opt/udt/cwa/cwa_fastapi/
+      - ./cwm:/opt/udt/cwm/
     environment:
       POSTGIS_DB_NAME__ENV_VAR: postgis
       POSTGIS_DB_USER__ENV_VAR: postgis

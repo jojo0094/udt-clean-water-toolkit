@@ -4,9 +4,13 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from geoalchemy2.elements import WKTElement
-from .database import get_db
-from .models import Utility, DMA, PipeMain, Hydrant, NetworkOptValve, PipeFlow
-from .schemas import GenerateSyntheticNetworkResponse, HealthCheckResponse
+from database import get_db
+from models import Utility, DMA, PipeMain, Hydrant, NetworkOptValve, PipeFlow
+from schemas import GenerateSyntheticNetworkResponse, HealthCheckResponse
+
+#path append
+import sys
+sys.path.append('/opt/udt/')
 
 router = APIRouter()
 
@@ -31,9 +35,13 @@ def generate_synthetic_network(db: Session = Depends(get_db)):
         db.query(Utility).delete()
         db.commit()
 
-        # 2. Define a geographic area (a simple 1km x 1km grid in WGS84)
-        min_x, min_y = -0.1, 51.5
-        max_x, max_y = -0.09, 51.51
+        # 2. Define a geographic area (a simple 1km x 1km grid)
+        # BNG coordinates for London area
+        min_x_bng, min_y_bng = 529000, 181000
+        max_x_bng, max_y_bng = 530000, 182000
+        # WGS84 coordinates for geometry_4326 fields
+        min_x_wgs, min_y_wgs = -0.1, 51.5
+        max_x_wgs, max_y_wgs = -0.09, 51.51
         grid_size = 10  # 10x10 grid
 
         # 3. Create a utility and a DMA
@@ -42,14 +50,17 @@ def generate_synthetic_network(db: Session = Depends(get_db)):
         db.flush()
 
         # Create a polygon for the DMA's geometry using WKT
-        # Note: Using SRID 4326 for simplicity (WGS84 lat/lon)
-        dma_wkt = f"MULTIPOLYGON((({min_x} {min_y},{max_x} {min_y},{max_x} {max_y},{min_x} {max_y},{min_x} {min_y})))"
+        # Note: Using SRID 27700 for British National Grid (matching model)
+        # Convert coordinates to approximate BNG values
+        min_x_bng, min_y_bng = 529000, 181000  # Approximate BNG for London area
+        max_x_bng, max_y_bng = 530000, 182000
+        dma_wkt = f"MULTIPOLYGON((({min_x_bng} {min_y_bng},{max_x_bng} {min_y_bng},{max_x_bng} {max_y_bng},{min_x_bng} {max_y_bng},{min_x_bng} {min_y_bng})))"
         
         dma = DMA(
             code="SYNTHETIC_DMA_01",
             name="Synthetic DMA 01",
             utility_id=utility.id,
-            geometry=WKTElement(dma_wkt, srid=4326)
+            geometry=WKTElement(dma_wkt, srid=27700)
         )
         db.add(dma)
         db.flush()
@@ -59,12 +70,14 @@ def generate_synthetic_network(db: Session = Depends(get_db)):
         
         # Horizontal pipes
         for i in range(grid_size + 1):
-            y = min_y + (i * (max_y - min_y) / grid_size)
-            line_wkt = f"LINESTRING({min_x} {y},{max_x} {y})"
+            y_bng = min_y_bng + (i * (max_y_bng - min_y_bng) / grid_size)
+            y_wgs = min_y_wgs + (i * (max_y_wgs - min_y_wgs) / grid_size)
+            line_wkt_bng = f"LINESTRING({min_x_bng} {y_bng},{max_x_bng} {y_bng})"
+            line_wkt_wgs = f"LINESTRING({min_x_wgs} {y_wgs},{max_x_wgs} {y_wgs})"
             pipe = PipeMain(
                 tag=f"H_PIPE_{i}",
-                geometry=WKTElement(line_wkt, srid=4326),
-                geometry_4326=WKTElement(line_wkt, srid=4326),
+                geometry=WKTElement(line_wkt_bng, srid=27700),
+                geometry_4326=WKTElement(line_wkt_wgs, srid=4326),
                 material=random.choice(['Iron', 'PVC', 'Copper']),
                 diameter=random.choice([100, 150, 200, 250, 300]),
                 pipe_type='Distribution Main'
@@ -73,12 +86,14 @@ def generate_synthetic_network(db: Session = Depends(get_db)):
 
         # Vertical pipes
         for i in range(grid_size + 1):
-            x = min_x + (i * (max_x - min_x) / grid_size)
-            line_wkt = f"LINESTRING({x} {min_y},{x} {max_y})"
+            x_bng = min_x_bng + (i * (max_x_bng - min_x_bng) / grid_size)
+            x_wgs = min_x_wgs + (i * (max_x_wgs - min_x_wgs) / grid_size)
+            line_wkt_bng = f"LINESTRING({x_bng} {min_y_bng},{x_bng} {max_y_bng})"
+            line_wkt_wgs = f"LINESTRING({x_wgs} {min_y_wgs},{x_wgs} {max_y_wgs})"
             pipe = PipeMain(
                 tag=f"V_PIPE_{i}",
-                geometry=WKTElement(line_wkt, srid=4326),
-                geometry_4326=WKTElement(line_wkt, srid=4326),
+                geometry=WKTElement(line_wkt_bng, srid=27700),
+                geometry_4326=WKTElement(line_wkt_wgs, srid=4326),
                 material=random.choice(['Iron', 'PVC', 'Copper']),
                 diameter=random.choice([100, 150, 200, 250, 300]),
                 pipe_type='Distribution Main'
@@ -104,25 +119,31 @@ def generate_synthetic_network(db: Session = Depends(get_db)):
                 if tag.startswith("H_PIPE_"):
                     # Horizontal pipe
                     i = int(tag.replace("H_PIPE_", ""))
-                    y = min_y + (i * (max_y - min_y) / grid_size)
+                    y_bng = min_y_bng + (i * (max_y_bng - min_y_bng) / grid_size)
+                    y_wgs = min_y_wgs + (i * (max_y_wgs - min_y_wgs) / grid_size)
                     t = random.random()
-                    x = min_x + t * (max_x - min_x)
-                    point_wkt = f"POINT({x} {y})"
+                    x_bng = min_x_bng + t * (max_x_bng - min_x_bng)
+                    x_wgs = min_x_wgs + t * (max_x_wgs - min_x_wgs)
+                    point_wkt_bng = f"POINT({x_bng} {y_bng})"
+                    point_wkt_wgs = f"POINT({x_wgs} {y_wgs})"
                 elif tag.startswith("V_PIPE_"):
                     # Vertical pipe
                     i = int(tag.replace("V_PIPE_", ""))
-                    x = min_x + (i * (max_x - min_x) / grid_size)
+                    x_bng = min_x_bng + (i * (max_x_bng - min_x_bng) / grid_size)
+                    x_wgs = min_x_wgs + (i * (max_x_wgs - min_x_wgs) / grid_size)
                     t = random.random()
-                    y = min_y + t * (max_y - min_y)
-                    point_wkt = f"POINT({x} {y})"
+                    y_bng = min_y_bng + t * (max_y_bng - min_y_bng)
+                    y_wgs = min_y_wgs + t * (max_y_wgs - min_y_wgs)
+                    point_wkt_bng = f"POINT({x_bng} {y_bng})"
+                    point_wkt_wgs = f"POINT({x_wgs} {y_wgs})"
                 else:
                     continue
                 
                 hydrant = Hydrant(
                     tag=f"HYD_{pipe.tag}",
-                    geometry=WKTElement(point_wkt, srid=4326),
-                    geometry_4326=WKTElement(point_wkt, srid=4326),
-                    acoustic_logger=str(random.choice([True, False]))
+                    geometry=WKTElement(point_wkt_bng, srid=27700),
+                    geometry_4326=WKTElement(point_wkt_wgs, srid=4326),
+                    acoustic_logger=random.choice([True, False])
                 )
                 hydrants.append(hydrant)
 
@@ -131,24 +152,30 @@ def generate_synthetic_network(db: Session = Depends(get_db)):
                 tag = pipe.tag
                 if tag.startswith("H_PIPE_"):
                     i = int(tag.replace("H_PIPE_", ""))
-                    y = min_y + (i * (max_y - min_y) / grid_size)
+                    y_bng = min_y_bng + (i * (max_y_bng - min_y_bng) / grid_size)
+                    y_wgs = min_y_wgs + (i * (max_y_wgs - min_y_wgs) / grid_size)
                     t = random.random()
-                    x = min_x + t * (max_x - min_x)
-                    point_wkt = f"POINT({x} {y})"
+                    x_bng = min_x_bng + t * (max_x_bng - min_x_bng)
+                    x_wgs = min_x_wgs + t * (max_x_wgs - min_x_wgs)
+                    point_wkt_bng = f"POINT({x_bng} {y_bng})"
+                    point_wkt_wgs = f"POINT({x_wgs} {y_wgs})"
                 elif tag.startswith("V_PIPE_"):
                     i = int(tag.replace("V_PIPE_", ""))
-                    x = min_x + (i * (max_x - min_x) / grid_size)
+                    x_bng = min_x_bng + (i * (max_x_bng - min_x_bng) / grid_size)
+                    x_wgs = min_x_wgs + (i * (max_x_wgs - min_x_wgs) / grid_size)
                     t = random.random()
-                    y = min_y + t * (max_y - min_y)
-                    point_wkt = f"POINT({x} {y})"
+                    y_bng = min_y_bng + t * (max_y_bng - min_y_bng)
+                    y_wgs = min_y_wgs + t * (max_y_wgs - min_y_wgs)
+                    point_wkt_bng = f"POINT({x_bng} {y_bng})"
+                    point_wkt_wgs = f"POINT({x_wgs} {y_wgs})"
                 else:
                     continue
                     
                 valve = NetworkOptValve(
                     tag=f"VALVE_{pipe.tag}",
-                    geometry=WKTElement(point_wkt, srid=4326),
-                    geometry_4326=WKTElement(point_wkt, srid=4326),
-                    acoustic_logger=str(random.choice([True, False]))
+                    geometry=WKTElement(point_wkt_bng, srid=27700),
+                    geometry_4326=WKTElement(point_wkt_wgs, srid=4326),
+                    acoustic_logger=random.choice([True, False])
                 )
                 valves.append(valve)
 
@@ -188,6 +215,58 @@ def generate_synthetic_network(db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error generating synthetic network: {str(e)}")
 
+@router.post("/load-to-neo4j", response_model=dict)
+def load_to_neo4j(db: Session = Depends(get_db)):
+    """
+    Load the synthetic network from PostGIS into Neo4j.
+    Transforms point assets (hydrants, valves) and pipe relationships.
+    """
+    try:
+        from neomodel import db as neo4j_db
+        from cwm.cleanwater.transform.gis_to_neo4j import GisToNeo4j
+        from constants import (
+            HYDRANT__NAME,
+            NETWORK_OPT_VALVE__NAME,
+            DEFAULT_SRID,
+        )
+        from sqids import Sqids
+
+        # 1. Clear Neo4j database
+        neo4j_db.cypher_query("MATCH (n) DETACH DELETE n")
+
+        # 2. Define point assets to include
+        point_asset_names = [
+            HYDRANT__NAME,
+            NETWORK_OPT_VALVE__NAME,
+        ]
+
+        # 3. Initialize transformation
+        sqids = Sqids()
+        gis_to_neo4j = GisToNeo4j(
+            srid=DEFAULT_SRID,
+            sqids=sqids,
+            point_asset_names=point_asset_names,
+        )
+
+        # 4. Get all pipes from PostGIS
+        pipes = db.query(PipeMain).all()
+        if not pipes:
+            raise Exception("No pipes found in PostGIS database")
+
+        # 5. Calculate graph components
+        gis_to_neo4j.calc_pipe_point_relative_positions(pipes)
+
+        # 6. Create Neo4j graph
+        gis_to_neo4j.create_neo4j_graph()
+
+        return {
+            "status": "success",
+            "message": "Successfully loaded network into Neo4j",
+            "pipes_loaded": len(pipes),
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading to Neo4j: {str(e)}")
 def generate_random_flow_data_dict():
     """Generate random flow data for 24 hours at 15-minute intervals"""
     start_time = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)

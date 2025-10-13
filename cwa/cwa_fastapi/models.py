@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Table, JSON
+from sqlalchemy import Boolean, Column, Integer, String, Float, DateTime, ForeignKey, Table, JSON
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 from datetime import datetime
-from .database import Base
+from database import Base
 
 # Association tables for many-to-many relationships
 pipe_main_dma = Table('assets_pipemain_dmas', Base.metadata,
@@ -70,7 +70,7 @@ class Hydrant(Base):
     tag = Column(String(50), nullable=False, unique=True, index=True)
     geometry = Column(Geometry('POINT', srid=27700), nullable=False)
     geometry_4326 = Column(Geometry('POINT', srid=4326), nullable=False)
-    acoustic_logger = Column(String(50), nullable=True)
+    acoustic_logger = Column(Boolean, nullable=True)
     modified_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
     
@@ -83,7 +83,7 @@ class NetworkOptValve(Base):
     tag = Column(String(50), nullable=False, unique=True, index=True)
     geometry = Column(Geometry('POINT', srid=27700), nullable=False)
     geometry_4326 = Column(Geometry('POINT', srid=4326), nullable=False)
-    acoustic_logger = Column(String(50), nullable=True)
+    acoustic_logger = Column(Boolean, nullable=True)
     modified_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
     
