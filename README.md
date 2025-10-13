@@ -2,6 +2,12 @@
 
 NB: This project is in active development and the toolkit is in alpha.
 
+## 🚀 New FastAPI Implementation!
+
+The toolkit now includes a modern **FastAPI-based REST API** for easy network generation and analysis. 
+
+**Quick Start**: See [QUICKSTART_FASTAPI.md](QUICKSTART_FASTAPI.md) for the fastest way to get started with the FastAPI implementation.
+
 ## Overview
 
 This project is a Proof-of-Concept (PoC) for a clean water toolkit that combines aspects of a digital twin with clean water modelling and analysis. The project was funded by Ofwat in collaboration with Thames Water and Severn Trent Water.
@@ -17,9 +23,10 @@ The toolkit was developed to address several key challenges in the water industr
 
 ### Project Structure
 
-The repository is organised into two main components:
+The repository is organised into three main components:
 - **`cwm` (Clean Water Module):** A core Python library containing the reusable logic for data transformation, network analysis, and modelling.
-- **`cwa` (Clean Water Application):** A Django-based application that uses the `cwm` module and provides an API for interacting with the digital twin.
+- **`cwa/cwa_geodjango` (Clean Water Application - Django):** A Django-based application that uses the `cwm` module for data management and network operations.
+- **`cwa/cwa_fastapi` (Clean Water Application - FastAPI):** A modern REST API built with FastAPI for easy integration and synthetic network generation.
 
 ## 💻 Using the Toolkit
 
@@ -86,12 +93,31 @@ There are two ways to get started with the toolkit:
 
 #### Option 1: Generate a Synthetic Network
 
-The toolkit includes a command to generate a sample network, including pipes, hydrants, valves, and synthetic flow data.
+The toolkit includes both Django management commands and a FastAPI endpoint to generate a sample network, including pipes, hydrants, valves, and synthetic flow data.
 
-Run the following command from your host machine's terminal:
+**Using FastAPI (Recommended):**
+
+The FastAPI server runs automatically on port 8000. You can generate a synthetic network using either:
+
+1. Via HTTP request from your host machine:
+```bash
+curl -X POST http://localhost:8000/api/v1/generate-synthetic-network
+```
+
+2. Via docker exec:
+```bash
+docker exec udtcwafastapi curl -X POST http://localhost:8000/api/v1/generate-synthetic-network
+```
+
+3. Visit the interactive API docs at http://localhost:8000/docs and use the `/api/v1/generate-synthetic-network` endpoint.
+
+**Using Django (Legacy):**
+
+You can still use the Django management command:
 ```bash
 docker-compose exec cwageodjango python3 manage.py generate_synthetic_network
 ```
+
 This will populate the PostGIS database with a ready-to-use sample network.
 
 Once the data is in PostGIS, you can load it into Neo4j to visualize and query it as a graph. Run the following command:
@@ -134,7 +160,15 @@ MATCH (n) RETURN n LIMIT 25
 
 ### Accessing Services
 
-1.  **Neo4j Browser**
+1.  **FastAPI Application**
+    *   URL: http://localhost:8000
+    *   Interactive API Documentation: http://localhost:8000/docs
+    *   Alternative API Documentation: http://localhost:8000/redoc
+    *   The FastAPI application provides REST endpoints for:
+        *   Health check: `GET /api/v1/health`
+        *   Generate synthetic network: `POST /api/v1/generate-synthetic-network`
+
+2.  **Neo4j Browser**
     *   URL: http://localhost:7474/browser/
     *   Connection:
         *   **Connect URL**: `bolt://localhost:7687` (usually pre-filled)
@@ -142,14 +176,14 @@ MATCH (n) RETURN n LIMIT 25
         *   **Username**: The username part of your `NEO4J_AUTH` value in the `.env` file (e.g., `neo4j`).
         *   **Password**: The password part of your `NEO4J_AUTH` value in the `.env` file (e.g., `YourStrongPasswordHere`).
 
-2.  **PostGIS Database**
+3.  **PostGIS Database**
     *   The PostGIS database is accessible on `localhost:5432`.
     *   Database Name: `postgis`
     *   Username: `postgis`
     *   Password: `postgis` (as set in `docker-compose.yml`)
     *   You can connect to this using tools like `psql` or a GUI like DBeaver or pgAdmin.
 
-3.  **cwageodjango Application**
+4.  **cwageodjango Application**
     *   (Further details on accessing any exposed API or web interface for the `cwageodjango` application will be added here as the project develops. Currently, its primary role is to support backend processes and data management, with its setup handled by the `orchestrator`.)
 
 ### Data Examples and Usage
