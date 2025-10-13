@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 from datetime import datetime
 from database import Base
+from constants import PIPE_MAIN__NAME, HYDRANT__NAME, NETWORK_OPT_VALVE__NAME
 
 # Association tables for many-to-many relationships
 pipe_main_dma = Table('assets_pipemain_dmas', Base.metadata,
@@ -70,7 +71,6 @@ class PipeMain(Base):
     
     # Add AssetMeta for compatibility with GisToGraph
     class AssetMeta:
-        from constants import PIPE_MAIN__NAME
         asset_name = PIPE_MAIN__NAME
 
 class Hydrant(Base):
@@ -93,7 +93,6 @@ class Hydrant(Base):
     
     # Add AssetMeta for compatibility with GisToGraph
     class AssetMeta:
-        from constants import HYDRANT__NAME
         asset_name = HYDRANT__NAME
 
 class NetworkOptValve(Base):
@@ -116,7 +115,6 @@ class NetworkOptValve(Base):
     
     # Add AssetMeta for compatibility with GisToGraph
     class AssetMeta:
-        from constants import NETWORK_OPT_VALVE__NAME
         asset_name = NETWORK_OPT_VALVE__NAME
 
 class PipeFlow(Base):
