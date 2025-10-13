@@ -86,12 +86,31 @@ There are two ways to get started with the toolkit:
 
 #### Option 1: Generate a Synthetic Network
 
-The toolkit includes a command to generate a sample network, including pipes, hydrants, valves, and synthetic flow data.
+The toolkit includes both Django management commands and a FastAPI endpoint to generate a sample network, including pipes, hydrants, valves, and synthetic flow data.
 
-Run the following command from your host machine's terminal:
+**Using FastAPI (Recommended):**
+
+The FastAPI server runs automatically on port 8000. You can generate a synthetic network using either:
+
+1. Via HTTP request from your host machine:
+```bash
+curl -X POST http://localhost:8000/api/v1/generate-synthetic-network
+```
+
+2. Via docker exec:
+```bash
+docker exec udtcwafastapi curl -X POST http://localhost:8000/api/v1/generate-synthetic-network
+```
+
+3. Visit the interactive API docs at http://localhost:8000/docs and use the `/api/v1/generate-synthetic-network` endpoint.
+
+**Using Django (Legacy):**
+
+You can still use the Django management command:
 ```bash
 docker-compose exec cwageodjango python3 manage.py generate_synthetic_network
 ```
+
 This will populate the PostGIS database with a ready-to-use sample network.
 
 Once the data is in PostGIS, you can load it into Neo4j to visualize and query it as a graph. Run the following command:
@@ -134,7 +153,15 @@ MATCH (n) RETURN n LIMIT 25
 
 ### Accessing Services
 
-1.  **Neo4j Browser**
+1.  **FastAPI Application**
+    *   URL: http://localhost:8000
+    *   Interactive API Documentation: http://localhost:8000/docs
+    *   Alternative API Documentation: http://localhost:8000/redoc
+    *   The FastAPI application provides REST endpoints for:
+        *   Health check: `GET /api/v1/health`
+        *   Generate synthetic network: `POST /api/v1/generate-synthetic-network`
+
+2.  **Neo4j Browser**
     *   URL: http://localhost:7474/browser/
     *   Connection:
         *   **Connect URL**: `bolt://localhost:7687` (usually pre-filled)
@@ -142,14 +169,14 @@ MATCH (n) RETURN n LIMIT 25
         *   **Username**: The username part of your `NEO4J_AUTH` value in the `.env` file (e.g., `neo4j`).
         *   **Password**: The password part of your `NEO4J_AUTH` value in the `.env` file (e.g., `YourStrongPasswordHere`).
 
-2.  **PostGIS Database**
+3.  **PostGIS Database**
     *   The PostGIS database is accessible on `localhost:5432`.
     *   Database Name: `postgis`
     *   Username: `postgis`
     *   Password: `postgis` (as set in `docker-compose.yml`)
     *   You can connect to this using tools like `psql` or a GUI like DBeaver or pgAdmin.
 
-3.  **cwageodjango Application**
+4.  **cwageodjango Application**
     *   (Further details on accessing any exposed API or web interface for the `cwageodjango` application will be added here as the project develops. Currently, its primary role is to support backend processes and data management, with its setup handled by the `orchestrator`.)
 
 ### Data Examples and Usage

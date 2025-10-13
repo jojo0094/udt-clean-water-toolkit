@@ -66,6 +66,29 @@ services:
         condition: service_started
     restart: always
 
+  cwafastapi:
+    container_name: udtcwafastapi
+    image: cwa_fastapi
+    build:
+      context: ./
+      dockerfile: devops/docker/Dockerfile_cwa_fastapi
+    ports:
+      - "8000:8000"
+    links:
+      - udtpostgis
+    volumes:
+      - ./cwa/cwa_fastapi:/opt/udt/cwa/cwa_fastapi/
+    environment:
+      POSTGIS_DB_NAME__ENV_VAR: postgis
+      POSTGIS_DB_USER__ENV_VAR: postgis
+      POSTGIS_DEFAULT_DB_HOST__ENV_VAR: udtpostgis
+      POSTGIS_DEFAULT_DB_PASSWORD__ENV_VAR: postgis
+      POSTGIS_DEFAULT_PORT__ENV_VAR: 5432
+    depends_on:
+      udtpostgis:
+        condition: service_healthy
+    restart: always
+
   orchestrator:
     image: docker:latest
     volumes:

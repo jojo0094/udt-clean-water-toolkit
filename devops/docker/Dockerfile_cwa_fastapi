@@ -1,0 +1,31 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get -y --no-install-recommends install \
+        vim \
+        python3.11 \
+        python3-dev \
+        python3-pip \
+        build-essential \
+        binutils \
+        libproj-dev \
+        gdal-bin \
+        libgdal-dev
+
+RUN mkdir -p /opt/udt/cwa/cwa_fastapi/
+
+WORKDIR /opt/udt/cwa/cwa_fastapi/
+
+COPY cwa/cwa_fastapi/requirements.txt .
+
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+COPY cwa/cwa_fastapi/ .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
