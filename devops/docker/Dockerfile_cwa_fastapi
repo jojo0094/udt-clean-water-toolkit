@@ -16,13 +16,16 @@ RUN set -eux; \
         libgdal-dev
 
 RUN mkdir -p /opt/udt/cwa/cwa_fastapi/
+RUN mkdir -p /opt/udt/cwm/
 
 WORKDIR /opt/udt/cwa/cwa_fastapi/
 
 COPY cwa/cwa_fastapi/requirements.txt .
+COPY cwm/ /opt/udt/cwm/
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+RUN cd /opt/udt/cwm && pip install -e .
 
 COPY cwa/cwa_fastapi/ .
 

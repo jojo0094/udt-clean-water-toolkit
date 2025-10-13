@@ -76,9 +76,12 @@ services:
       - "8000:8000"
     links:
       - udtpostgis
+      - udtneo4j
     volumes:
       - ./cwa/cwa_fastapi:/opt/udt/cwa/cwa_fastapi/
       - ./cwm:/opt/udt/cwm/
+    env_file:
+      - .env
     environment:
       POSTGIS_DB_NAME__ENV_VAR: postgis
       POSTGIS_DB_USER__ENV_VAR: postgis
@@ -88,6 +91,8 @@ services:
     depends_on:
       udtpostgis:
         condition: service_healthy
+      udtneo4j:
+        condition: service_started
     restart: always
 
   orchestrator:

@@ -10,3 +10,5 @@ neomodel==5.2.1
 neo4j==5.15.0
 sqids==0.4.1
 annotated-types==0.7.0
+django==5.0
+networkx==3.2.1
