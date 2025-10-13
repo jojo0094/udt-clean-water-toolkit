@@ -2,6 +2,12 @@
 
 NB: This project is in active development and the toolkit is in alpha.
 
+## 🚀 New FastAPI Implementation!
+
+The toolkit now includes a modern **FastAPI-based REST API** for easy network generation and analysis. 
+
+**Quick Start**: See [QUICKSTART_FASTAPI.md](QUICKSTART_FASTAPI.md) for the fastest way to get started with the FastAPI implementation.
+
 ## Overview
 
 This project is a Proof-of-Concept (PoC) for a clean water toolkit that combines aspects of a digital twin with clean water modelling and analysis. The project was funded by Ofwat in collaboration with Thames Water and Severn Trent Water.
@@ -17,9 +23,10 @@ The toolkit was developed to address several key challenges in the water industr
 
 ### Project Structure
 
-The repository is organised into two main components:
+The repository is organised into three main components:
 - **`cwm` (Clean Water Module):** A core Python library containing the reusable logic for data transformation, network analysis, and modelling.
-- **`cwa` (Clean Water Application):** A Django-based application that uses the `cwm` module and provides an API for interacting with the digital twin.
+- **`cwa/cwa_geodjango` (Clean Water Application - Django):** A Django-based application that uses the `cwm` module for data management and network operations.
+- **`cwa/cwa_fastapi` (Clean Water Application - FastAPI):** A modern REST API built with FastAPI for easy integration and synthetic network generation.
 
 ## 💻 Using the Toolkit
 
