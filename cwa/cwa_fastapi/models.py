@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
 from datetime import datetime
 from database import Base
+from constants import PIPE_MAIN__NAME, HYDRANT__NAME, NETWORK_OPT_VALVE__NAME
 
 # Association tables for many-to-many relationships
 pipe_main_dma = Table('assets_pipemain_dmas', Base.metadata,
@@ -62,6 +63,15 @@ class PipeMain(Base):
     
     dmas = relationship("DMA", secondary=pipe_main_dma, back_populates="pipe_mains")
     flow = relationship("PipeFlow", back_populates="pipe_main", uselist=False)
+    
+    # Add pk property for compatibility with Django ORM
+    @property
+    def pk(self):
+        return self.id
+    
+    # Add AssetMeta for compatibility with GisToGraph
+    class AssetMeta:
+        asset_name = PIPE_MAIN__NAME
 
 class Hydrant(Base):
     __tablename__ = 'assets_hydrant'
@@ -75,6 +85,15 @@ class Hydrant(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     dmas = relationship("DMA", secondary=hydrant_dma, back_populates="hydrants")
+    
+    # Add pk property for compatibility with Django ORM
+    @property
+    def pk(self):
+        return self.id
+    
+    # Add AssetMeta for compatibility with GisToGraph
+    class AssetMeta:
+        asset_name = HYDRANT__NAME
 
 class NetworkOptValve(Base):
     __tablename__ = 'assets_networkoptvalve'
@@ -88,6 +107,15 @@ class NetworkOptValve(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     dmas = relationship("DMA", secondary=valve_dma, back_populates="valves")
+    
+    # Add pk property for compatibility with Django ORM
+    @property
+    def pk(self):
+        return self.id
+    
+    # Add AssetMeta for compatibility with GisToGraph
+    class AssetMeta:
+        asset_name = NETWORK_OPT_VALVE__NAME
 
 class PipeFlow(Base):
     __tablename__ = 'waterpipes_pipeflow'

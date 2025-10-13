@@ -2,7 +2,7 @@ import random
 import json
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from geoalchemy2.elements import WKTElement
 from database import get_db
 from models import Utility, DMA, PipeMain, Hydrant, NetworkOptValve, PipeFlow
@@ -220,10 +220,13 @@ def load_to_neo4j(db: Session = Depends(get_db)):
     """
     Load the synthetic network from PostGIS into Neo4j.
     Transforms point assets (hydrants, valves) and pipe relationships.
+    
+    This endpoint uses the GisToNeo4jAdapter which provides compatibility
+    between SQLAlchemy/GeoAlchemy2 and the cleanwater GisToNeo4j transformer.
     """
     try:
         from neomodel import db as neo4j_db
-        from cwm.cleanwater.transform.gis_to_neo4j import GisToNeo4j
+        from gis_to_neo4j_adapter import GisToNeo4jAdapter
         from constants import (
             HYDRANT__NAME,
             NETWORK_OPT_VALVE__NAME,
@@ -240,16 +243,21 @@ def load_to_neo4j(db: Session = Depends(get_db)):
             NETWORK_OPT_VALVE__NAME,
         ]
 
-        # 3. Initialize transformation
+        # 3. Initialize transformation with SQLAlchemy-compatible adapter
         sqids = Sqids()
-        gis_to_neo4j = GisToNeo4j(
+        gis_to_neo4j = GisToNeo4jAdapter(
             srid=DEFAULT_SRID,
             sqids=sqids,
             point_asset_names=point_asset_names,
+            db_session=db,  # Pass SQLAlchemy session
         )
 
-        # 4. Get all pipes from PostGIS
-        pipes = db.query(PipeMain).all()
+        # 4. Get all pipes from PostGIS with eager loading of relationships
+        # Eager load relationships to avoid lazy loading issues
+        pipes = db.query(PipeMain).options(
+            joinedload(PipeMain.dmas).joinedload(DMA.utility)
+        ).all()
+        
         if not pipes:
             raise Exception("No pipes found in PostGIS database")
 
@@ -266,7 +274,44 @@ def load_to_neo4j(db: Session = Depends(get_db)):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading to Neo4j: {str(e)}")
+        import traceback
+        error_detail = f"Error loading to Neo4j: {str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=error_detail)
+
+@router.get("/verify-neo4j", response_model=dict)
+def verify_neo4j():
+    """
+    Verify that data has been loaded into the Neo4j database.
+    Returns counts of nodes and relationships.
+    """
+    try:
+        from neomodel import db as neo4j_db
+        
+        # Query to count nodes
+        node_results, _ = neo4j_db.cypher_query("MATCH (n) RETURN count(n) AS node_count")
+        node_count = node_results[0][0] if node_results else 0
+        
+        # Query to count relationships
+        rel_results, _ = neo4j_db.cypher_query("MATCH ()-[r]->() RETURN count(r) AS rel_count")
+        rel_count = rel_results[0][0] if rel_results else 0
+        
+        if node_count > 0 and rel_count > 0:
+            return {
+                "status": "success",
+                "message": "Neo4j database contains data",
+                "node_count": node_count,
+                "relationship_count": rel_count
+            }
+        else:
+            return {
+                "status": "warning",
+                "message": "Neo4j database is empty or partially loaded",
+                "node_count": node_count,
+                "relationship_count": rel_count
+            }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error verifying Neo4j: {str(e)}")
 def generate_random_flow_data_dict():
     """Generate random flow data for 24 hours at 15-minute intervals"""
     start_time = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
