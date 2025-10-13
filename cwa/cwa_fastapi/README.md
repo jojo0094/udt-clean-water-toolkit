@@ -154,3 +154,17 @@ docker exec udtcwafastapi curl http://localhost:8000/api/v1/verify-neo4j
 - **Pydantic**: Data validation using Python type annotations
 - **Uvicorn**: ASGI server implementation
 - **PostGIS**: Spatial database extension for PostgreSQL
+- **Neo4j**: Graph database for network analysis
+- **Neomodel**: Object-Graph Mapper for Neo4j
+- **NetworkX**: Python package for complex networks
+- **cleanwater (cwm)**: Core water network transformation library
+
+## Dependencies
+
+The FastAPI application requires the following key dependencies:
+
+1. **Core FastAPI dependencies** - defined in `requirements.txt`
+2. **cleanwater package (cwm)** - installed from the `/opt/udt/cwm` directory in the Docker container
+3. **Django** - required by the cleanwater package for GIS transformations (though the FastAPI app itself doesn't use Django)
+
+The Dockerfile handles the installation of all dependencies, including the cleanwater package.
