@@ -110,6 +110,8 @@ curl -X POST http://localhost:8000/api/v1/generate-synthetic-network
 | GET | `/` | Welcome message |
 | GET | `/api/v1/health` | Health check |
 | POST | `/api/v1/generate-synthetic-network` | Generate network |
+| POST | `/api/v1/load-to-neo4j` | Load network to Neo4j ⭐ NEW! |
+| GET | `/api/v1/verify-neo4j` | Verify Neo4j data ⭐ NEW! |
 | GET | `/docs` | Interactive API docs (Swagger) |
 | GET | `/redoc` | Alternative API docs (ReDoc) |
 

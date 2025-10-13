@@ -42,6 +42,31 @@ The FastAPI application provides a modern, high-performance alternative to the D
   }
   ```
 
+### Load Network to Neo4j
+- **Endpoint**: `POST /api/v1/load-to-neo4j`
+- **Description**: Load the water network from PostGIS into Neo4j graph database
+- **Response**: 
+  ```json
+  {
+    "status": "success",
+    "message": "Successfully loaded network into Neo4j",
+    "pipes_loaded": 22
+  }
+  ```
+
+### Verify Neo4j Data
+- **Endpoint**: `GET /api/v1/verify-neo4j`
+- **Description**: Verify that data has been loaded into Neo4j
+- **Response**: 
+  ```json
+  {
+    "status": "success",
+    "message": "Neo4j database contains data",
+    "node_count": 125,
+    "relationship_count": 200
+  }
+  ```
+
 ## Usage
 
 ### With Docker Compose
@@ -62,12 +87,27 @@ docker-compose up -d
    ```bash
    curl -X POST http://localhost:8000/api/v1/generate-synthetic-network
    ```
+4. **Load to Neo4j**: 
+   ```bash
+   curl -X POST http://localhost:8000/api/v1/load-to-neo4j
+   ```
+5. **Verify Neo4j**: 
+   ```bash
+   curl http://localhost:8000/api/v1/verify-neo4j
+   ```
 
 ### Docker Exec
 
 You can also use docker exec to call the API from within the container:
 ```bash
+# Generate synthetic network
 docker exec udtcwafastapi curl -X POST http://localhost:8000/api/v1/generate-synthetic-network
+
+# Load to Neo4j
+docker exec udtcwafastapi curl -X POST http://localhost:8000/api/v1/load-to-neo4j
+
+# Verify Neo4j data
+docker exec udtcwafastapi curl http://localhost:8000/api/v1/verify-neo4j
 ```
 
 ## Development
@@ -97,7 +137,12 @@ docker exec udtcwafastapi curl -X POST http://localhost:8000/api/v1/generate-syn
 
 - **main.py**: FastAPI application entry point
 - **routes.py**: API endpoint definitions and business logic
-- **models.py**: SQLAlchemy ORM models
+- **models.py**: SQLAlchemy ORM models with GeoAlchemy2 for spatial data
+- **database.py**: Database connection configuration for PostGIS and Neo4j
+- **gis_to_neo4j_adapter.py**: Compatibility layer for loading GIS data to Neo4j
+- **config_validator.py**: Pydantic-based configuration validation (Django-free)
+- **schemas.py**: Pydantic models for request/response validation
+- **constants.py**: Application constants
 - **schemas.py**: Pydantic models for request/response validation
 - **database.py**: Database connection and session management
 
