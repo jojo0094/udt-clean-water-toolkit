@@ -62,6 +62,16 @@ class PipeMain(Base):
     
     dmas = relationship("DMA", secondary=pipe_main_dma, back_populates="pipe_mains")
     flow = relationship("PipeFlow", back_populates="pipe_main", uselist=False)
+    
+    # Add pk property for compatibility with Django ORM
+    @property
+    def pk(self):
+        return self.id
+    
+    # Add AssetMeta for compatibility with GisToGraph
+    class AssetMeta:
+        from constants import PIPE_MAIN__NAME
+        asset_name = PIPE_MAIN__NAME
 
 class Hydrant(Base):
     __tablename__ = 'assets_hydrant'
@@ -75,6 +85,16 @@ class Hydrant(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     dmas = relationship("DMA", secondary=hydrant_dma, back_populates="hydrants")
+    
+    # Add pk property for compatibility with Django ORM
+    @property
+    def pk(self):
+        return self.id
+    
+    # Add AssetMeta for compatibility with GisToGraph
+    class AssetMeta:
+        from constants import HYDRANT__NAME
+        asset_name = HYDRANT__NAME
 
 class NetworkOptValve(Base):
     __tablename__ = 'assets_networkoptvalve'
@@ -88,6 +108,16 @@ class NetworkOptValve(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     dmas = relationship("DMA", secondary=valve_dma, back_populates="valves")
+    
+    # Add pk property for compatibility with Django ORM
+    @property
+    def pk(self):
+        return self.id
+    
+    # Add AssetMeta for compatibility with GisToGraph
+    class AssetMeta:
+        from constants import NETWORK_OPT_VALVE__NAME
+        asset_name = NETWORK_OPT_VALVE__NAME
 
 class PipeFlow(Base):
     __tablename__ = 'waterpipes_pipeflow'
