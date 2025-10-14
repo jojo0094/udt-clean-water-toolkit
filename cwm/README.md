@@ -1,5 +1,22 @@
 # cleanwater module
 
+## Understanding Data Structures
+
+**New to this codebase?** Having difficulty understanding data flow and object types?
+
+👉 **Start here**: [cleanwater/DATA_FLOW.md](cleanwater/DATA_FLOW.md)
+
+This guide explains:
+- What are nodes and edges?
+- What attributes do they have?
+- How are lists organized?
+- Complete examples with diagrams
+
+**Additional Resources:**
+- [cleanwater/core/schemas.py](cleanwater/core/schemas.py) - Complete type definitions
+- [cleanwater/core/README.md](cleanwater/core/README.md) - Quick reference
+- [cleanwater/transform/README.md](cleanwater/transform/README.md) - Module guide
+
 ## 1. Requirements
 
 ### 1.1 Packages

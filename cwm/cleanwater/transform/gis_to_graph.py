@@ -1,3 +1,17 @@
+"""
+GIS to Graph transformation module.
+
+This module converts GIS (Geographic Information System) data into graph-based representations.
+For detailed documentation on the data structures (nodes and edges), see:
+    cleanwater.core.schemas module
+
+Key data structures:
+    - PipeNode: Junction or end points on pipes
+    - AssetNode: Physical assets (valves, hydrants, etc.)
+    - PipeEdge: Pipe segments connecting pipe nodes
+    - PipeToAssetEdge: Connections between pipe nodes and co-located assets
+"""
+
 import json
 import bisect
 from typing import Annotated
@@ -46,6 +60,8 @@ class GisToGraph:
     as nodes and edges in a graph. This conversion facilitates the analysis of network structures
     and their properties, particularly in the context of utilities and infrastructure management.
 
+    For detailed schema definitions of nodes and edges, see cleanwater.core.schemas module.
+
     Attributes:
         srid (int): Spatial Reference System Identifier (SRID) used for geometry operations.
         sqids: Object responsible for generating unique IDs for nodes.
@@ -53,10 +69,23 @@ class GisToGraph:
         processor_count (int): Number of processors to use in parallel operations.
         chunk_size (int or None): Size of data chunks for parallel processing.
         neoj4_point (bool): Whether to use Neo4j point geometry for nodes.
-        all_pipe_edges_by_pipe (list): List of edges for each pipe.
-        all_pipe_nodes_by_pipe (list): List of nodes for each pipe.
-        all_asset_nodes_by_pipe (list): List of asset nodes for each pipe.
-        all_pipe_node_to_asset_node_edges (list): List of edges connecting pipe nodes to asset nodes.
+        
+        all_pipe_edges_by_pipe (List[List[PipeEdge]]): List of pipe edge lists, one per pipe.
+            Each inner list contains PipeEdge dictionaries representing pipe segments.
+            See cleanwater.core.schemas.PipeEdge for structure.
+            
+        all_pipe_nodes_by_pipe (List[List[PipeNode]]): List of pipe node lists, one per pipe.
+            Each inner list contains PipeNode dictionaries (junctions and end points).
+            See cleanwater.core.schemas.PipeNode for structure.
+            
+        all_asset_nodes_by_pipe (List[List[List[AssetNode]]]): Nested list of asset nodes.
+            Organized as: [pipe][position_on_pipe][assets_at_position]
+            See cleanwater.core.schemas.AssetNode for structure.
+            
+        all_pipe_node_to_asset_node_edges (List[List[PipeToAssetEdge]]): List of edge lists
+            connecting pipe nodes to co-located asset nodes.
+            See cleanwater.core.schemas.PipeToAssetEdge for structure.
+            
         dma_data (list): List of DMA (District Metered Area) data associated with nodes.
         utility_data (list): List of utility data associated with nodes.
         network_node_labels (list): List of unique network node labels.

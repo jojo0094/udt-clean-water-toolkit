@@ -1,0 +1,238 @@
+# Data Flow and Structure Documentation
+
+## Quick Reference
+
+If you're having difficulty understanding data flow and object types, **start here**:
+
+1. **[core/schemas.py](core/schemas.py)** - Complete type definitions with examples
+2. **[core/README.md](core/README.md)** - Quick start guide
+3. **[transform/README.md](transform/README.md)** - Module-specific guide
+
+## Data Flow Overview
+
+```
+GIS Data (Pipes + Assets)
+         |
+         v
+    GisToGraph
+         |
+         +-- Processes geometry
+         +-- Identifies junctions and end points
+         +-- Locates assets on pipes
+         |
+         v
+    Nodes and Edges Created
+         |
+         +-- PipeNodes (junctions/ends)
+         +-- AssetNodes (valves/hydrants)
+         +-- PipeEdges (pipe segments)
+         +-- PipeToAssetEdges (connections)
+         |
+         v
+    Organized into Lists
+         |
+         +-- all_pipe_edges_by_pipe
+         +-- all_pipe_nodes_by_pipe
+         +-- all_asset_nodes_by_pipe
+         +-- all_pipe_node_to_asset_node_edges
+         |
+         v
+    Output to Graph Database
+         |
+         +-- Neo4j (GisToNeo4j)
+         +-- NetworkX (GisToNetworkX)
+         +-- NetworKit (GisToNetworKit)
+```
+
+## Understanding List Structures
+
+### Example: Water Network with 2 Pipes
+
+```
+Pipe 1:  [Junction A]----Segment 1----[Junction B]----Segment 2----[End C]
+                |                           |
+            [Valve V1]                  [Hydrant H1]
+
+Pipe 2:  [Junction D]----Segment 3----[End E]
+                                           |
+                                      [Meter M1]
+```
+
+### How This Translates to Data Structures
+
+#### all_pipe_nodes_by_pipe (List[List[PipeNode]])
+```python
+[
+    # Pipe 1 nodes
+    [
+        {"node_key": "A", "node_labels": ["PipeJunction"], ...},
+        {"node_key": "B", "node_labels": ["PipeJunction"], ...},
+        {"node_key": "C", "node_labels": ["PipeEnd"], ...}
+    ],
+    # Pipe 2 nodes
+    [
+        {"node_key": "D", "node_labels": ["PipeJunction"], ...},
+        {"node_key": "E", "node_labels": ["PipeEnd"], ...}
+    ]
+]
+```
+
+#### all_pipe_edges_by_pipe (List[List[PipeEdge]])
+```python
+[
+    # Pipe 1 edges (segments)
+    [
+        {"from_node_key": "A", "to_node_key": "B", "edge_key": "A-B", 
+         "material": "Cast Iron", "diameter": 150.0, "segment_length": 50.5, ...},
+        {"from_node_key": "B", "to_node_key": "C", "edge_key": "B-C",
+         "material": "Cast Iron", "diameter": 150.0, "segment_length": 30.2, ...}
+    ],
+    # Pipe 2 edges (segments)
+    [
+        {"from_node_key": "D", "to_node_key": "E", "edge_key": "D-E",
+         "material": "PVC", "diameter": 100.0, "segment_length": 25.8, ...}
+    ]
+]
+```
+
+#### all_asset_nodes_by_pipe (List[List[List[AssetNode]]])
+```python
+[
+    # Pipe 1 assets (organized by position along pipe)
+    [
+        # Assets at position 0 (Junction A)
+        [{"node_key": "V1", "asset_name": "Valve", "tag": "VLV_001", ...}],
+        # Assets at position 1 (Junction B)
+        [{"node_key": "H1", "asset_name": "Hydrant", "tag": "HYD_001", ...}],
+        # Assets at position 2 (End C) - empty
+        []
+    ],
+    # Pipe 2 assets
+    [
+        # Assets at position 0 (Junction D) - empty
+        [],
+        # Assets at position 1 (End E)
+        [{"node_key": "M1", "asset_name": "Meter", "tag": "MTR_001", ...}]
+    ]
+]
+```
+
+#### all_pipe_node_to_asset_node_edges (List[List[PipeToAssetEdge]])
+```python
+[
+    # Pipe 1 connections
+    [
+        {"from_node_key": "A", "to_node_key": "V1", "edge_key": "A-V1"},
+        {"from_node_key": "B", "to_node_key": "H1", "edge_key": "B-H1"}
+    ],
+    # Pipe 2 connections
+    [
+        {"from_node_key": "E", "to_node_key": "M1", "edge_key": "E-M1"}
+    ]
+]
+```
+
+## What is Each Data Type?
+
+### PipeNode
+A **dictionary** representing a point on a pipe network:
+- Created at pipe junctions (where pipes meet)
+- Created at pipe ends (where pipes terminate)
+- Contains: `node_key`, `coords_27700`, `node_labels`, `pipe_tags`, DMA info, utility info
+
+### AssetNode
+A **dictionary** representing a physical asset:
+- Valves, hydrants, meters, sensors, etc.
+- Located at specific coordinates on the network
+- Contains: `node_key`, `coords_27700`, `node_labels`, `tag`, `asset_name`, `subtype`
+
+### PipeEdge
+A **dictionary** representing a pipe segment:
+- Connects two PipeNodes
+- Has physical properties: material, diameter, length
+- Contains: `from_node_key`, `to_node_key`, `edge_key`, material, diameter, length, geometry (WKT)
+
+### PipeToAssetEdge
+A **dictionary** representing a connection:
+- Links a PipeNode to an AssetNode at the same location
+- Simpler than PipeEdge (just the connection, no physical properties)
+- Contains: `from_node_key`, `to_node_key`, `edge_key`
+
+## Key Concepts
+
+### node_key
+A **unique identifier string** for each node, generated by encoding:
+- The node's coordinates (x, y)
+- The node's type (using an index)
+- Using the `sqids` library
+
+Example: `"abc123def456"`
+
+### edge_key
+A **unique identifier string** for each edge, formatted as:
+```
+"{from_node_key}-{to_node_key}"
+```
+
+Example: `"abc123def456-xyz789ghi012"`
+
+### coords_27700
+A **list of two floats** representing coordinates:
+- In the EPSG:27700 projection (British National Grid)
+- Format: `[x, y]`
+
+Example: `[532145.7, 181456.3]`
+
+### node_labels
+A **list of strings** categorizing the node:
+- Always starts with `"NetworkNode"`
+- Then type-specific labels
+
+Examples:
+- Pipe junction: `["NetworkNode", "PipeNode", "PipeJunction"]`
+- Pipe end: `["NetworkNode", "PipeNode", "PipeEnd"]`
+- Valve: `["NetworkNode", "PointAsset", "Valve"]`
+- Hydrant: `["NetworkNode", "PointAsset", "Hydrant"]`
+
+## Common Patterns
+
+### Iterating Over Pipes
+```python
+for pipe_index, pipe_nodes in enumerate(all_pipe_nodes_by_pipe):
+    pipe_edges = all_pipe_edges_by_pipe[pipe_index]
+    pipe_assets = all_asset_nodes_by_pipe[pipe_index]
+    
+    print(f"Pipe {pipe_index} has {len(pipe_nodes)} nodes and {len(pipe_edges)} edges")
+```
+
+### Accessing Asset Information
+```python
+for pipe_index, pipe_assets in enumerate(all_asset_nodes_by_pipe):
+    for position_index, assets_at_position in enumerate(pipe_assets):
+        for asset in assets_at_position:
+            print(f"Asset {asset['tag']} at position {position_index} on pipe {pipe_index}")
+```
+
+### Understanding Edge Connections
+```python
+for pipe_edges in all_pipe_edges_by_pipe:
+    for edge in pipe_edges:
+        from_node = edge['from_node_key']
+        to_node = edge['to_node_key']
+        length = edge['segment_length']
+        print(f"Pipe segment from {from_node} to {to_node}: {length}m")
+```
+
+## Still Confused?
+
+1. **See examples**: Check `core/schemas.py` for detailed examples with sample data
+2. **Read docstrings**: Every method in `transform/gis_to_graph.py` has detailed documentation
+3. **Run tests**: `tests/test_schemas.py` shows how to create and validate data structures
+4. **Ask for help**: The issue describes the exact confusion - refer to the schemas!
+
+## Quick Links
+
+- [Schemas with examples](core/schemas.py)
+- [Core module guide](core/README.md)
+- [Transform module guide](transform/README.md)
+- [Main transformation class](transform/gis_to_graph.py)
