@@ -1,3 +1,11 @@
+"""
+GIS to Neo4j transformation module.
+
+This module extends GisToGraph to create Neo4j graph representations.
+For detailed documentation on the data structures (nodes and edges), see:
+    cleanwater.core.schemas module
+"""
+
 from multiprocessing.pool import ThreadPool
 from typing import Annotated
 from annotated_types import Gt
@@ -14,7 +22,12 @@ def flatten_concatenation(matrix):
 
 
 class GisToNeo4j(GisToGraph):
-    """Create a Neo4J graph of assets from a geospatial network of assets"""
+    """
+    Create a Neo4J graph of assets from a geospatial network of assets.
+    
+    For detailed schema definitions of nodes and edges processed by this class,
+    see cleanwater.core.schemas module.
+    """
 
     def __init__(
         self,
