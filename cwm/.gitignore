@@ -1,0 +1,4 @@
+.venv
+
+# anytghin that has to do with venv
+*venv*
