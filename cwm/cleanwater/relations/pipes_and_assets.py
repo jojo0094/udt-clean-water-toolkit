@@ -6,7 +6,7 @@ from django.db.models.query import QuerySet
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import AsGeoJSON, Cast, Length, AsWKT
 from cleanwater.data_managers import GeoDjangoDataManager
-from cwageodjango.core.db.models.functions import LineStartPoint, LineEndPoint
+from cleanwater.core.db.models.functions import LineStartPoint, LineEndPoint
 
 
 class PipeAndAssets(GeoDjangoDataManager):
