@@ -1382,7 +1382,7 @@ class GisToGraph:
 
         if intersection_geom.geom_type == "Point":
             intersection_params = normalised_point_position_on_line(
-                base_pipe_geom, intersection_geom.coords
+                base_pipe_geom.coords, intersection_geom.coords
             )
             data = [
                 {
@@ -1399,7 +1399,7 @@ class GisToGraph:
             data = []
             for coords in intersection_geom.coords:
                 intersection_params = normalised_point_position_on_line(
-                    base_pipe_geom,
+                    base_pipe_geom.coords,
                     coords,
                 )
                 data.append(
