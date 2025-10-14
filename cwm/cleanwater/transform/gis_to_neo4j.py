@@ -7,15 +7,27 @@ For detailed documentation on the data structures (nodes and edges), see:
 """
 
 from multiprocessing.pool import ThreadPool
-from typing import Annotated
+from typing import Annotated, List, TypeVar
 from annotated_types import Gt
 from neomodel import db
 from collections import defaultdict
 from . import GisToGraph
+from ..core.schemas import PipeEdge
+
+T = TypeVar('T')
 
 
-def flatten_concatenation(matrix):
-    flat_list = []
+def flatten_concatenation(matrix: List[List[T]]) -> List[T]:
+    """
+    Flattens a 2D list into a 1D list.
+
+    Args:
+        matrix: A 2D list where each inner list contains elements of type T.
+
+    Returns:
+        A flat list containing all elements from the input matrix.
+    """
+    flat_list: List[T] = []
     for row in matrix:
         flat_list += row
     return flat_list
@@ -111,14 +123,22 @@ class GisToNeo4j(GisToGraph):
 
         db.cypher_query(query, {"all_unique_nodes": nodes})
 
-    def _batch_create_pipe_node_relations(self):
-        edges = flatten_concatenation(self.all_pipe_edges_by_pipe)
+    def _batch_create_pipe_node_relations(self) -> None:
+        """
+        Batch creates pipe node relations in Neo4j, grouped by asset label.
+        
+        This method processes all pipe edges and creates relationships between
+        network nodes in the Neo4j database. Edges are grouped by their asset_label
+        to create relationships with the appropriate type name.
+        """
+        edges: List[PipeEdge] = flatten_concatenation(self.all_pipe_edges_by_pipe)
 
-        grouped_edges = defaultdict(list)
+        grouped_edges: dict[str, List[PipeEdge]] = defaultdict(list)
         for edge in edges:
+            # asset_label is guaranteed to be present in PipeEdge schema
             grouped_edges[edge["asset_label"]].append(edge)
 
-        for asset_label, edges in grouped_edges.items():
+        for asset_label, edge_list in grouped_edges.items():
             query = f"""
             UNWIND $edges AS edge
             MATCH (n:NetworkNode {{node_key: edge.from_node_key}}),
@@ -135,7 +155,7 @@ class GisToNeo4j(GisToGraph):
                 SET r.createdAt = timestamp()
             RETURN r
             """
-            db.cypher_query(query, {"edges": edges})
+            db.cypher_query(query, {"edges": edge_list})
 
     def set_dynamic_asset_node_properties(self):
         subquery = """n.acoustic_logger = CASE WHEN node.acoustic_logger IS NOT NULL THEN node.acoustic_logger ELSE NULL END,
