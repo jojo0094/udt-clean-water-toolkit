@@ -22,7 +22,34 @@ Data Structures:
 Attributes are documented in each TypedDict below.
 """
 
-from typing import TypedDict, List, Optional, Any
+from typing import TypedDict, List, Optional, Any, Tuple
+
+
+# Type aliases for geometric data structures
+
+Coords = List[List[float]]
+"""
+Type alias for coordinate data used in geometric operations.
+
+Represents a list of coordinate pairs [x, y] for LineString or Polygon geometries.
+Each inner list contains [x, y] coordinates as floats.
+
+Examples:
+    LineString coordinates: [[532145.7, 181456.3], [532150.2, 181460.8]]
+    Point coordinates: [532145.7, 181456.3] (single coordinate pair)
+"""
+
+NormPointPosition = Tuple[float, float]
+"""
+Type alias for normalized point position data.
+
+Returns a tuple containing:
+    - distance_from_line_start (float): The actual distance from the start of the line to the point
+    - normalised_position_on_line (float): The normalized position (0.0 to 1.0) along the line
+
+Example:
+    (45.67823, 0.234) means the point is 45.67823 units from the start and at 23.4% along the line
+"""
 
 
 class NetworkNodeBase(TypedDict):

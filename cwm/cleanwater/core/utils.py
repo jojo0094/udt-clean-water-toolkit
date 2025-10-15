@@ -1,7 +1,8 @@
 from shapely import LineString, Point, line_locate_point, ops
 
+from ..core.schemas import Coords, NormPointPosition
 
-def normalised_point_position_on_line(line_string_coords, end_point_coords):
+def normalised_point_position_on_line(line_string_coords: Coords, end_point_coords: Coords) -> NormPointPosition:
     """Get the normalised position of a Point geometry on a LineString geometry relative to the
     LineString start Point.
 

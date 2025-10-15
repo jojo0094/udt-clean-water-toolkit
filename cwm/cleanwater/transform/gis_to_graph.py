@@ -255,7 +255,7 @@ class GisToGraph:
         """
 
         # Convert the base pipe data from a queryset object to a dictionary
-        base_pipe: dict = self._get_base_pipe_data(pipe_qs_object)
+        base_pipe: BasePipeData = self._get_base_pipe_data(pipe_qs_object)
 
         # Convert all the data from intersecting pipes into
         # a list of dictionaries

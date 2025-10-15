@@ -1,0 +1,25 @@
+{
+  "include": ["**/*.py"],
+  "exclude": ["**/node_modules", "**/__pycache__", ".git", "**/migrations", "**/.venv"],
+  "pythonPath": "./.venv/bin/python3",
+  "pythonPlatform": "Linux",
+  "typeCheckingMode": "basic",
+  "extraPaths": [
+    "./cwm",
+    "./cwa",
+    "./cwm/.venv/lib/python3.12/site-packages",
+    "./cwa/cwa_fastapi/.venv/lib/python3.12/site-packages"
+  ],
+  "ignore": ["tests", "docs"],
+  "venvPath": "./",
+  "stubPath": "./typings",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportOptionalMemberAccess": false,
+  "reportOptionalCall": false,
+  "reportOptionalIterable": false,
+  "reportOptionalContextManager": false,
+  "reportOptionalOperand": false,
+  "reportTypedDictNotRequiredAccess": false
+}
+
