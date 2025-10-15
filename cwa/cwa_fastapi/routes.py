@@ -7,7 +7,6 @@ from geoalchemy2.elements import WKTElement
 from database import get_db
 from models import Utility, DMA, PipeMain, Hydrant, NetworkOptValve, PipeFlow
 from schemas import GenerateSyntheticNetworkResponse, HealthCheckResponse
-
 #path append
 import sys
 sys.path.append('/opt/udt/')

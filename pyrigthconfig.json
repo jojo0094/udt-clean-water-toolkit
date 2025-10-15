@@ -1,0 +1,13 @@
+{
+  "include": ["**/*.py"],
+  "exclude": ["**/node_modules", "**/__pycache__", ".git"],
+  "pythonPath": "/workspaces/udt-clean-water-toolkit/cwm/.venv/bin/python3",
+  "pythonPlatform": "Linux",
+  "typeCheckingMode": "basic",
+  "extraPaths": [
+    "/workspaces/udt-clean-water-toolkit/cwm",
+    "/workspaces/udt-clean-water-toolkit/cwm/.venv/lib/python3.12/site-packages"
+  ],
+  "ignore": ["tests", "docs"],
+  "venvPath": "/workspaces/udt-clean-water-toolkit/cwa/cwa_fastapi/"
+}

@@ -5,7 +5,6 @@ from neomodel import db
 from collections import defaultdict
 from . import GisToGraph
 
-
 def flatten_concatenation(matrix):
     flat_list = []
     for row in matrix:

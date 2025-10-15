@@ -12,7 +12,6 @@ from geoalchemy2.shape import to_shape
 from shapely import Point
 from shapely.wkt import loads as wkt_loads
 
-
 class GisToNeo4jAdapter(GisToNeo4j):
     """
     Adapter class that extends GisToNeo4j to work with SQLAlchemy models.

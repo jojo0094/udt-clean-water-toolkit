@@ -105,6 +105,7 @@ dependencies = [
  "geopandas",
  "numpy",
  "neomodel>=5.5.3",
+ "annotated-types>=0.7.0",
 ]
 
 # List additional groups of dependencies here (e.g. development

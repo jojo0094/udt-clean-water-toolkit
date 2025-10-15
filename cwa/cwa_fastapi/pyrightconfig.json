@@ -1,0 +1,13 @@
+{
+  "include": ["**/*.py"],
+  "exclude": ["**/node_modules", "**/__pycache__", ".git"],
+  "pythonVersion": "3.12",
+  "pythonPath": "./.venv/bin/python3",
+  "venvPath": ".",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": false,
+  "reportMissingTypeStubs": false,
+  "extraPaths": [
+    "/workspaces/udt-clean-water-toolkit/cwm"
+  ]
+}
