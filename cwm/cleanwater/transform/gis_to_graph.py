@@ -455,13 +455,13 @@ class GisToGraph:
 
         return self._set_pipe_properties(node, pipe_node_data)
 
-    def _merge_pipe_end_node(self, node):
+    def _merge_pipe_end_node(self, node: dict) -> dict:
         pipe_node_data = {}
         pipe_node_data["node_labels"] = [PIPE_NODE__LABEL, PIPE_END__LABEL]
 
         return self._set_pipe_properties(node, pipe_node_data)
 
-    def _handle_pipe_asset_node_labels(self, node):
+    def _handle_pipe_asset_node_labels(self, node: dict) -> dict:
         pipe_node_data = {}
 
         node_encode_index = self.point_asset_names.index(node["asset_name"])
@@ -577,7 +577,8 @@ class GisToGraph:
         return pipe_node_data, asset_node_data
 
     @staticmethod
-    def _set_network_node_default_props(nodes) -> dict:
+    @staticmethod
+    def _set_network_node_default_props(nodes: List[dict]) -> dict:
 
         return {
             "utility": nodes[0]["utility_name"],
@@ -591,7 +592,7 @@ class GisToGraph:
         }
 
     @staticmethod
-    def _consolidate_nodes_on_position(nodes_ordered: list) -> list:
+    def _consolidate_nodes_on_position(nodes_ordered: List[dict]) -> List[List[dict]]:
         """
         Consolidate nodes that are positioned at the same distance from the start of the pipe.
 
@@ -770,7 +771,7 @@ class GisToGraph:
 
         return all_asset_node_data
 
-    def _create_pipe_asset_nodes(self, cnodes: list) -> tuple:
+    def _create_pipe_asset_nodes(self, cnodes: List[dict]) -> Tuple[dict, dict, List[dict], List[dict], List[str]]:
         """
         Create and configure nodes for pipes and associated assets, including utility and DMA data.
 
@@ -864,8 +865,8 @@ class GisToGraph:
 
     @staticmethod
     def _create_pipe_node_to_asset_node_edge(
-        pipe_node: dict, asset_nodes_for_pipe_node: list
-    ):
+        pipe_node: dict, asset_nodes_for_pipe_node: List[dict]
+    ) -> List[PipeToAssetEdge]:
         """
         Create edges that connect a pipe node to associated asset nodes.
 
@@ -913,7 +914,7 @@ class GisToGraph:
             )
         return edges
 
-    def _set_network_node_and_edge_data(self, consolidated_nodes: list) -> tuple:
+    def _set_network_node_and_edge_data(self, consolidated_nodes: List[List[dict]]) -> Tuple[List[PipeNode], List[List[AssetNode]], List[PipeToAssetEdge], List[dict], List[dict], List[str]]:
         """
         Set and configure network nodes and edges based on consolidated node positions.
 
@@ -1270,12 +1271,12 @@ class GisToGraph:
 
         return base_pipe
 
-    def _combine_all_pipe_junctions(self, pipe_qs_object) -> list:
+    def _combine_all_pipe_junctions(self, pipe_qs_object: Any) -> List[Any]:
         # This method is problematic as it assumes a pre-fetched attribute.
         # For now, we will return an empty list as junctions are handled by intersections.
         return []
 
-    def _combine_all_point_assets(self, pipe_qs_object) -> list:
+    def _combine_all_point_assets(self, pipe_qs_object: Any) -> List[Any]:
         from cwageodjango.assets.models import Hydrant, NetworkOptValve
 
         assets = []
@@ -1363,7 +1364,7 @@ class GisToGraph:
 
     def _map_get_normalised_positions(
         self, base_pipe_geom: GEOSGeometry, junction_or_asset: dict
-    ) -> list:
+    ) -> List[dict]:
         """
         Calculate and map the normalized positions of junctions or assets along a pipeline segment.
 
@@ -1463,8 +1464,8 @@ class GisToGraph:
         return data
 
     def _get_connections_points_on_pipe(
-        self, base_pipe: dict, intersected_objects: list
-    ) -> list:
+        self, base_pipe: BasePipeData, intersected_objects: List[dict]
+    ) -> List[dict]:
         """
         Calculate the intersection points of objects along a pipeline and map their positions.
 
@@ -1512,7 +1513,7 @@ class GisToGraph:
         return object_intersections
 
     @staticmethod
-    def _get_non_termini_intersecting_pipes(base_pipe, junctions_with_positions):
+    def _get_non_termini_intersecting_pipes(base_pipe: BasePipeData, junctions_with_positions: List[dict]) -> List[dict]:
         termini_intersecting_pipe_tags = (
             base_pipe["line_start_intersection_tags"]
             + base_pipe["line_end_intersection_tags"]
@@ -1575,7 +1576,7 @@ class GisToGraph:
 
         return non_termini_intersecting_pipes
 
-    def _set_terminal_nodes(self, base_pipe):
+    def _set_terminal_nodes(self, base_pipe: BasePipeData) -> List[dict]:
         start_node_distance_cm = 0
         # round to int to make distance comparisons more robust
         end_node_distance_cm = round(base_pipe["pipe_length"] * 100)
@@ -1624,8 +1625,8 @@ class GisToGraph:
         return nodes_ordered
 
     def _set_non_terminal_nodes(
-        self, base_pipe, nodes_ordered, non_termini_intersecting_pipes
-    ):
+        self, base_pipe: BasePipeData, nodes_ordered: List[dict], non_termini_intersecting_pipes: List[dict]
+    ) -> List[dict]:
         distances = [x["distance_from_pipe_start_cm"] for x in nodes_ordered]
 
         position_index = 0
@@ -1671,8 +1672,8 @@ class GisToGraph:
         return nodes_ordered
 
     def _set_point_asset_properties(
-        self, base_pipe, nodes_ordered, point_assets_with_positions
-    ):
+        self, base_pipe: BasePipeData, nodes_ordered: List[dict], point_assets_with_positions: List[dict]
+    ) -> List[dict]:
 
         for asset in point_assets_with_positions:
 
@@ -1694,8 +1695,8 @@ class GisToGraph:
         return nodes_ordered
 
     def _set_node_properties(
-        self, base_pipe, junctions_with_positions, point_assets_with_positions
-    ):
+        self, base_pipe: BasePipeData, junctions_with_positions: List[dict], point_assets_with_positions: List[dict]
+    ) -> List[dict]:
         non_termini_intersecting_pipes = self._get_non_termini_intersecting_pipes(
             base_pipe, junctions_with_positions
         )
@@ -1734,7 +1735,7 @@ class GisToGraph:
         return qs.count()
 
     @staticmethod
-    def _get_utility(qs_object):
+    def _get_utility(qs_object: dict) -> str:
         utilities = list(set(qs_object["utilities"]))
 
         if len(utilities) > 1:
@@ -1752,7 +1753,7 @@ class GisToGraph:
 
         return json.dumps(dma_data)
 
-    def _encode_node_key(self, point, extra_params=[]):
+    def _encode_node_key(self, point: Any, extra_params: List[int] = []) -> str:
         """
         Round and cast Point geometry coordinates to str to remove '.'
         then return back to int to make make coords sqid compatible.
