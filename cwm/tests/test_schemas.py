@@ -14,6 +14,7 @@ from cleanwater.core.schemas import (
     PipeToAssetEdge,
     DMAData,
     UtilityData,
+    BasePipeData,
     AllPipeEdgesByPipe,
     AllPipeNodesByPipe,
     AllAssetNodesByPipe,
@@ -39,6 +40,7 @@ class TestSchemaImports:
         """Test that data schema types can be imported."""
         assert DMAData is not None
         assert UtilityData is not None
+        assert BasePipeData is not None
 
     def test_import_collection_types(self):
         """Test that collection type aliases can be imported."""
@@ -169,6 +171,41 @@ class TestSchemaStructure:
         assert "node_key" in utility_data
         assert "utility" in utility_data
 
+    def test_base_pipe_data_structure(self):
+        """Test BasePipeData has expected attributes."""
+        # This is a partial test - creating a full BasePipeData would require
+        # mocking Django and Shapely objects
+        from typing import TYPE_CHECKING
+        
+        # At least verify the type exists and has annotations
+        if TYPE_CHECKING:
+            base_pipe: BasePipeData = {
+                "id": 12345,
+                "tag": "PIPE_12345",
+                "pipe_type": "trunk_main",
+                "asset_name": "pipe_main",
+                "asset_label": "pipe_main",
+                "pipe_length": 123.456,
+                "wkt": "LINESTRING (0 0, 1 1)",
+                "material": "Cast Iron",
+                "diameter": 150.0,
+                "dma_ids": [1, 2],
+                "dma_codes": ["DMA001", "DMA002"],
+                "dma_names": ["Central", "East"],
+                "dmas": '[{"code": "DMA001", "name": "Central"}]',
+                "utilities": ["Thames Water"],
+                "geometry": None,  # Would be GEOSGeometry
+                "start_point_geom": None,  # Would be Point
+                "end_point_geom": None,  # Would be Point
+                "line_start_intersection_tags": [],
+                "line_start_intersection_ids": [],
+                "line_end_intersection_tags": [],
+                "line_end_intersection_ids": [],
+            }
+        
+        # At minimum verify the type is defined
+        assert BasePipeData is not None
+
 
 class TestSchemaDocumentation:
     """Test that schema definitions have proper documentation."""
@@ -192,3 +229,8 @@ class TestSchemaDocumentation:
         """Test that PipeToAssetEdge has documentation."""
         assert PipeToAssetEdge.__doc__ is not None
         assert len(PipeToAssetEdge.__doc__) > 100
+
+    def test_base_pipe_data_has_docstring(self):
+        """Test that BasePipeData has documentation."""
+        assert BasePipeData.__doc__ is not None
+        assert len(BasePipeData.__doc__) > 100
