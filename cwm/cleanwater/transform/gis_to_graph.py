@@ -14,7 +14,7 @@ Key data structures:
 
 import json
 import bisect
-from typing import Annotated
+from typing import Annotated, Any, List, Tuple
 from annotated_types import Gt
 from multiprocessing import Pool
 from django.contrib.gis.geos import GEOSGeometry
@@ -34,9 +34,18 @@ from ..core.constants import (
     PIPE_END__LABEL,
     POINT_ASSET__LABEL,
 )
+from ..core.schemas import (
+    BasePipeData,
+    PipeNode,
+    PipeEdge,
+    AssetNode,
+    PipeToAssetEdge,
+    DMAData,
+    UtilityData,
+)
 
 
-def flatten_concatenation(matrix):
+def flatten_concatenation(matrix: List[List[Any]]) -> List[Any]:
     """
     Flattens a 2D list (matrix) into a 1D list.
 
@@ -125,7 +134,7 @@ class GisToGraph:
             []
         )  # List of pipe edge labels with no duplicates
 
-    def reset_pipe_asset_data(self):
+    def reset_pipe_asset_data(self) -> None:
         """
         Resets the internal data structures related to pipe and asset data.
         Clears all previously stored pipe edges, nodes, and associated data.
@@ -195,7 +204,7 @@ class GisToGraph:
             list(set(flatten_concatenation(all_asset_node_labels)))
         )
 
-    def map_relative_positions_calc(self, pipe_qs_object):
+    def map_relative_positions_calc(self, pipe_qs_object: Any) -> Tuple[List[PipeNode], List[PipeEdge], List[List[AssetNode]], List[PipeToAssetEdge], List[DMAData], List[UtilityData], List[str]]:
         """
         Calculate and map the relative positions of pipeline segments, junctions, and point assets.
 
@@ -294,7 +303,7 @@ class GisToGraph:
             all_asset_node_labels,
         )
 
-    def create_dma_data(self, node_data: dict) -> list:
+    def create_dma_data(self, node_data: dict) -> List[dict]:
         """
         Create a list of dictionaries representing District Metered Area (DMA) data.
 
@@ -313,7 +322,7 @@ class GisToGraph:
 
         Returns:
         --------
-        list
+        List[dict]
             A list of dictionaries, where each dictionary represents a DMA with the following keys:
             - "code": The DMA code.
             - "name": The DMA name.
@@ -336,7 +345,7 @@ class GisToGraph:
 
         return dma_data
 
-    def create_utility_data(self, node_data: dict) -> list:
+    def create_utility_data(self, node_data: dict) -> List[dict]:
         """
         Create a list of dictionaries representing utility data for a specific node.
 
@@ -353,7 +362,7 @@ class GisToGraph:
 
         Returns:
         --------
-        list
+        List[dict]
             A list containing a single dictionary with the following keys:
             - "name": The utility name.
             - "to_node_key": The unique node key linking the utility to the node.
@@ -1010,7 +1019,7 @@ class GisToGraph:
             all_asset_node_labels,
         )
 
-    def _get_edges_by_pipe(self, base_pipe: dict, nodes_by_pipe: list) -> list:
+    def _get_edges_by_pipe(self, base_pipe: BasePipeData, nodes_by_pipe: List[PipeNode]) -> List[PipeEdge]:
         """
         Generate edges for a pipeline segment based on the nodes along the pipe.
 
@@ -1021,18 +1030,18 @@ class GisToGraph:
 
         Parameters:
         -----------
-        base_pipe : dict
-            A dictionary containing information about the pipeline segment, including its geometry
+        base_pipe : BasePipeData
+            A TypedDict containing information about the pipeline segment, including its geometry
             and various attributes such as material, diameter, and asset labels.
 
-        nodes_by_pipe : list
-            A list of dictionaries, where each dictionary represents a node along the pipeline.
+        nodes_by_pipe : List[PipeNode]
+            A list of PipeNode TypedDicts, where each represents a node along the pipeline.
             The nodes should be ordered sequentially along the pipe to ensure correct edge creation.
 
         Returns:
         --------
-        list
-            A list of dictionaries, where each dictionary represents an edge connecting two nodes
+        List[PipeEdge]
+            A list of PipeEdge TypedDicts, where each represents an edge connecting two nodes
             along the pipeline. Each edge dictionary contains the following keys:
             - "from_node_key": The unique key of the starting node.
             - "to_node_key": The unique key of the ending node.
@@ -1100,7 +1109,7 @@ class GisToGraph:
 
         return edges_by_pipe
 
-    def _set_nodes_and_edges(self, base_pipe, nodes_ordered):
+    def _set_nodes_and_edges(self, base_pipe: BasePipeData, nodes_ordered: List[dict]) -> Tuple[List[PipeNode], List[PipeEdge], List[List[AssetNode]], List[PipeToAssetEdge], List[dict], List[dict], List[str]]:
         """
         Configure and create nodes and edges for a pipeline segment based on ordered nodes.
 
@@ -1112,39 +1121,39 @@ class GisToGraph:
 
         Parameters:
         -----------
-        base_pipe : dict
-            A dictionary containing information about the pipeline segment, including its geometry
+        base_pipe : BasePipeData
+            A TypedDict containing information about the pipeline segment, including its geometry
             and various attributes such as material, diameter, and asset labels.
 
-        nodes_ordered : list
+        nodes_ordered : List[dict]
             A list of dictionaries representing nodes along the pipeline. The nodes should be ordered
             sequentially based on their positions along the pipeline.
 
         Returns:
         --------
-        tuple
+        Tuple[List[PipeNode], List[PipeEdge], List[List[AssetNode]], List[PipeToAssetEdge], List[dict], List[dict], List[str]]
             A tuple containing the following elements:
-            - nodes_by_pipe : list
-                A list of dictionaries representing the consolidated and configured nodes along the pipeline.
+            - nodes_by_pipe : List[PipeNode]
+                A list of PipeNode TypedDicts representing the consolidated and configured nodes along the pipeline.
 
-            - edges_by_pipe : list
-                A list of dictionaries representing the edges connecting sequential nodes along the pipeline,
+            - edges_by_pipe : List[PipeEdge]
+                A list of PipeEdge TypedDicts representing the edges connecting sequential nodes along the pipeline,
                 including information about the pipeline segment and its properties.
 
-            - asset_nodes_by_pipe : list
-                A list of lists, where each inner list contains dictionaries representing asset nodes associated
+            - asset_nodes_by_pipe : List[List[AssetNode]]
+                A list of lists, where each inner list contains AssetNode TypedDicts representing asset nodes associated
                 with the corresponding pipe node.
 
-            - pipe_node_to_asset_node_edges : list
-                A list of dictionaries representing the edges connecting pipe nodes to associated asset nodes.
+            - pipe_node_to_asset_node_edges : List[PipeToAssetEdge]
+                A list of PipeToAssetEdge TypedDicts representing the edges connecting pipe nodes to associated asset nodes.
 
-            - dma_data : list
+            - dma_data : List[dict]
                 A list of dictionaries representing DMA (District Metered Area) data associated with the nodes.
 
-            - utility_data : list
+            - utility_data : List[dict]
                 A list of dictionaries representing utility data associated with the nodes.
 
-            - all_asset_node_labels : list
+            - all_asset_node_labels : List[str]
                 A list of labels for all asset nodes identified and processed.
 
         Notes:
@@ -1182,7 +1191,7 @@ class GisToGraph:
             all_asset_node_labels,
         )
 
-    def _get_base_pipe_data(self, qs_object) -> dict:
+    def _get_base_pipe_data(self, qs_object: Any) -> BasePipeData:
         """
         Extract and organize the base data for a pipeline segment from a queryset object.
 
@@ -1199,8 +1208,8 @@ class GisToGraph:
 
         Returns:
         --------
-        dict
-            A dictionary containing the extracted data for the pipeline segment, with the following keys:
+        BasePipeData
+            A TypedDict containing the extracted data for the pipeline segment, with the following keys:
             - "id": The primary key of the pipeline segment.
             - "tag": The tag associated with the pipeline segment.
             - "pipe_type": The type of the pipe.
@@ -1705,7 +1714,7 @@ class GisToGraph:
 
         return nodes_ordered
 
-    def get_srid(self):
+    def get_srid(self) -> int:
         """Get the currently used global srid"""
         return self.srid
 
@@ -1735,7 +1744,7 @@ class GisToGraph:
         return utilities[0]
 
     @staticmethod
-    def build_dma_data_as_json(dma_codes, dma_names):
+    def build_dma_data_as_json(dma_codes: List[str], dma_names: List[str]) -> str:
         dma_data = [
             {"code": dma_code, "name": dma_name}
             for dma_code, dma_name in zip(dma_codes, dma_names)

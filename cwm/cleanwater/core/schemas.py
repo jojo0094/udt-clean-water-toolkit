@@ -15,10 +15,14 @@ Edge Types:
 - PipeEdge: Represents a connection between two pipe nodes along a pipe segment
 - PipeToAssetEdge: Represents a connection between a pipe node and an asset node
 
+Data Structures:
+---------------
+- BasePipeData: Base pipeline segment data extracted from database queryset
+
 Attributes are documented in each TypedDict below.
 """
 
-from typing import TypedDict, List, Optional
+from typing import TypedDict, List, Optional, Any
 
 
 class NetworkNodeBase(TypedDict):
@@ -254,3 +258,81 @@ class UtilityData(TypedDict):
     """
     node_key: str
     utility: str
+
+
+class BasePipeData(TypedDict):
+    """
+    Schema for base pipeline segment data extracted from database queryset.
+    
+    This structure is returned by _get_base_pipe_data() and contains all the
+    fundamental information about a pipe segment needed for graph construction.
+    
+    Attributes:
+        id (int): The primary key of the pipeline segment.
+        tag (str): The tag associated with the pipeline segment.
+        pipe_type (str): The type of the pipe (e.g., "trunk_main", "distribution_main").
+        asset_name (str): The name of the pipe asset (e.g., "pipe_main").
+        asset_label (str): The label of the pipe asset (typically same as asset_name).
+        pipe_length (float): The length of the pipe in meters.
+        wkt (str): The Well-Known Text (WKT) representation of the pipe's geometry.
+        material (str): The material of the pipe (e.g., "Cast Iron", "PVC").
+        diameter (float): The diameter of the pipe in millimeters.
+        dma_ids (List[int]): The IDs of the associated District Metered Areas (DMAs).
+        dma_codes (List[str]): The codes of the associated DMAs.
+        dma_names (List[str]): The names of the associated DMAs.
+        dmas (str): A JSON string representation of the DMA data.
+        utilities (List[str]): The names of utilities associated with the pipeline.
+        geometry (Any): The geometric data of the pipeline segment (Django GEOSGeometry).
+        start_point_geom (Any): The geometry of the pipeline's start point (Shapely Point).
+        end_point_geom (Any): The geometry of the pipeline's end point (Shapely Point).
+        line_start_intersection_tags (List[str]): Tags from the intersections at the start of the pipe.
+        line_start_intersection_ids (List[int]): IDs from the intersections at the start of the pipe.
+        line_end_intersection_tags (List[str]): Tags from the intersections at the end of the pipe.
+        line_end_intersection_ids (List[int]): IDs from the intersections at the end of the pipe.
+    
+    Example:
+        {
+            "id": 12345,
+            "tag": "PIPE_12345",
+            "pipe_type": "trunk_main",
+            "asset_name": "pipe_main",
+            "asset_label": "pipe_main",
+            "pipe_length": 123.456,
+            "wkt": "LINESTRING (532145.7 181456.3, 532150.2 181460.8)",
+            "material": "Cast Iron",
+            "diameter": 150.0,
+            "dma_ids": [1, 2],
+            "dma_codes": ["DMA001", "DMA002"],
+            "dma_names": ["Central District", "East District"],
+            "dmas": '[{"code": "DMA001", "name": "Central District"}]',
+            "utilities": ["Thames Water"],
+            "geometry": <GEOSGeometry object>,
+            "start_point_geom": <Point object>,
+            "end_point_geom": <Point object>,
+            "line_start_intersection_tags": [],
+            "line_start_intersection_ids": [],
+            "line_end_intersection_tags": [],
+            "line_end_intersection_ids": []
+        }
+    """
+    id: int
+    tag: str
+    pipe_type: str
+    asset_name: str
+    asset_label: str
+    pipe_length: float
+    wkt: str
+    material: str
+    diameter: float
+    dma_ids: List[int]
+    dma_codes: List[str]
+    dma_names: List[str]
+    dmas: str
+    utilities: List[str]
+    geometry: Any
+    start_point_geom: Any
+    end_point_geom: Any
+    line_start_intersection_tags: List[str]
+    line_start_intersection_ids: List[int]
+    line_end_intersection_tags: List[str]
+    line_end_intersection_ids: List[int]
